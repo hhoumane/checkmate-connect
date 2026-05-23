@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkmate&Connect — From Neurons to LLMs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a; --white:#f8f6f1; --gd:#1c1c1c;
+  --gm:#3a3a3a; --gl:#888; --gf:#c5c2bc;
+  --b:rgba(10,10,10,0.09); --bs:rgba(10,10,10,0.26);
+  --fd:'Playfair Display',Georgia,serif;
+  --fb:'DM Sans',sans-serif;
+  --fm:'IBM Plex Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--black);font-family:var(--fb);-webkit-font-smoothing:antialiased;}
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;background:var(--white);border-bottom:1px solid var(--b);}
+.logo{font-family:var(--fd);font-size:18px;font-weight:900;letter-spacing:-0.02em;color:var(--black);display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-icon{width:32px;height:32px;background:var(--black);border-radius:6px;display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:6px;flex-shrink:0;}
+.logo-icon span{background:var(--white);border-radius:1px;}
+.logo-icon span:nth-child(1){border-radius:50%;}
+.logo-icon span:nth-child(4){border-radius:50%;}
+.logo-amp{color:var(--gl);font-style:italic;font-weight:400;}
+.nav-counter{font-family:var(--fm);font-size:12px;color:var(--gl);letter-spacing:0.04em;}
+/* HERO */
+.hero{padding:140px 40px 72px;max-width:800px;border-bottom:1px solid var(--b);}
+.hero-tag{font-family:var(--fm);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gl);margin-bottom:18px;}
+.hero h1{font-family:var(--fd);font-size:clamp(34px,5.5vw,68px);font-weight:900;line-height:1.06;letter-spacing:-0.03em;margin-bottom:24px;}
+.hero h1 em{font-style:italic;color:var(--gm);}
+.hero p{font-size:17px;line-height:1.8;color:var(--gm);max-width:540px;font-weight:300;}
+/* PROGRESS */
+.progress-track{height:2px;background:var(--b);}
+.progress-fill{height:100%;background:var(--black);transition:width .35s ease;}
+/* LAYOUT */
+.main{display:grid;grid-template-columns:220px 1fr;margin-top:64px;}
+/* SIDEBAR */
+.sidebar{border-right:1px solid var(--b);padding:32px 0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;scrollbar-width:none;}
+.sidebar::-webkit-scrollbar{display:none;}
+.sb-title{font-family:var(--fm);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gl);padding:0 24px 12px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:9px 24px;cursor:pointer;transition:background .15s;border-left:2px solid transparent;}
+.sb-item:hover{background:rgba(10,10,10,.04);}
+.sb-item.active{border-left-color:var(--black);background:rgba(10,10,10,.04);}
+.sb-num{font-family:var(--fm);font-size:10px;color:var(--gf);min-width:18px;}
+.sb-item.active .sb-num{color:var(--gl);}
+.sb-item.done .sb-num{color:var(--black);}
+.sb-label{font-size:12px;color:var(--gl);font-weight:400;line-height:1.3;}
+.sb-item.active .sb-label{color:var(--black);font-weight:500;}
+/* CONTENT */
+.content{display:flex;flex-direction:column;}
+.step-view{padding:48px 56px;border-bottom:1px solid var(--b);animation:fadeUp .28s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+.step-pill-row{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.step-pill{font-family:var(--fm);font-size:10px;letter-spacing:.1em;text-transform:uppercase;background:var(--black);color:var(--white);padding:3px 10px;border-radius:2px;}
+.step-frac{font-family:var(--fm);font-size:11px;color:var(--gl);}
+.step-title{font-family:var(--fd);font-size:clamp(22px,2.8vw,34px);font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-bottom:20px;}
+.step-body{max-width:620px;}
+.step-body p{font-size:15px;line-height:1.9;margin-bottom:14px;}
+.step-body p.lead{font-size:16px;font-weight:400;color:var(--black);}
+.step-body p.sub{font-weight:300;color:var(--gm);}
+.visual-wrap{margin-top:28px;padding-top:28px;border-top:1px solid var(--b);}
+/* NAV CONTROLS */
+.nav-controls{display:flex;align-items:center;justify-content:space-between;padding:22px 56px;border-top:1px solid var(--b);background:var(--white);position:sticky;bottom:0;}
+.btn{font-family:var(--fb);font-size:13px;font-weight:500;padding:10px 24px;border-radius:4px;cursor:pointer;transition:all .15s;letter-spacing:.01em;border:none;}
+.btn-ghost{background:transparent;border:1px solid var(--bs);color:var(--gm);}
+.btn-ghost:hover{background:rgba(10,10,10,.05);}
+.btn-ghost:disabled{opacity:.22;cursor:default;pointer-events:none;}
+.btn-solid{background:var(--black);color:var(--white);}
+.btn-solid:hover{background:var(--gd);}
+.dots-row{display:flex;gap:6px;}
+.dot{width:20px;height:4px;border-radius:2px;cursor:pointer;transition:background .2s;}
+/* INTERACTIVE */
+input[type=range]{accent-color:var(--black);cursor:pointer;}
+.ctrl-row{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap;}
+.ctrl-label{font-family:var(--fm);font-size:12px;color:var(--gl);min-width:52px;}
+.ctrl-val{font-family:var(--fm);font-size:12px;font-weight:500;color:var(--black);min-width:32px;}
+.btn-c{font-family:var(--fb);font-size:12px;font-weight:500;padding:8px 18px;border-radius:3px;cursor:pointer;transition:all .15s;border:none;}
+.btn-c.solid{background:var(--black);color:var(--white);}
+.btn-c.solid:hover{background:var(--gd);}
+.btn-c.outline{background:transparent;border:1px solid var(--bs);color:var(--gm);}
+.btn-c.outline:hover{background:rgba(10,10,10,.05);}
+.act-btn{font-family:var(--fb);font-size:12px;padding:7px 16px;border-radius:3px;cursor:pointer;margin-right:6px;margin-bottom:4px;transition:all .15s;border:none;}
+.hint{font-family:var(--fm);font-size:11px;color:var(--gl);margin-top:10px;display:block;line-height:1.5;}
+.formula{font-family:var(--fm);font-size:13px;color:var(--gm);background:rgba(10,10,10,.04);border:1px solid var(--b);padding:11px 16px;border-radius:4px;margin-top:14px;line-height:1.7;}
+.formula strong{color:var(--black);}
+.click-hint{font-family:var(--fm);font-size:11px;color:var(--gl);margin-bottom:8px;display:block;}
+@media(max-width:720px){
+  nav{padding:0 20px;}
+  .hero{padding:110px 20px 52px;}
+  .main{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .step-view{padding:28px 20px;}
+  .nav-controls{padding:16px 20px;}
+}
+</style>
+</head>
+<body>
+<nav>
+  <a class="logo" href="#">
+    <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
+    Checkmate<span class="logo-amp">&amp;</span>Connect
+  </a>
+  <span class="nav-counter" id="nav-counter">01 / 12</span>
+</nav>
+<div class="hero">
+  <p class="hero-tag">A visual course &middot; 12 steps</p>
+  <h1>From <em>one neuron</em><br>to large language models</h1>
+  <p>If you know the equation of a line, you have everything you need. This course walks you from y&nbsp;=&nbsp;wx&nbsp;+&nbsp;b &mdash; one parameter, one operation &mdash; all the way to the trillion-token models reshaping how we think about intelligence.</p>
+</div>
+<div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:8.33%"></div></div>
+<div class="main" id="main-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="content">
+    <div class="step-view" id="step-view"></div>
+    <div class="nav-controls">
+      <button class="btn btn-ghost" id="btn-prev">&#8592; Previous</button>
+      <div class="dots-row" id="dots"></div>
+      <button class="btn btn-solid" id="btn-next">Next &#8594;</button>
+    </div>
+  </div>
+</div>
+<script>
+/* ---- PALETTE ---- */
+var K={
+  bk:'#0a0a0a', wh:'#f8f6f1', gd:'#1c1c1c',
+  gm:'#3a3a3a', gl:'#888',    gf:'#c5c2bc',
+  bg:'rgba(10,10,10,0.06)', bgm:'rgba(10,10,10,0.15)', bgd:'rgba(10,10,10,0.42)',
+  cr:'#eeece8'
+};
+
+/* ---- SVG PRIMITIVES ---- */
+/* Arrow marker: tip visually lands AT (x2,y2). Keep line 6px short of edge when target is a circle of radius r: x2 = cx ± r */
+function DEFS(){
+  return '<defs>'
+    +'<marker id="ah" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="6" markerHeight="6" orient="auto-start-reverse">'
+    +'<path d="M1 1L10 6L1 11" fill="none" stroke="context-stroke" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'</marker>'
+    +'</defs>';
+}
+function SVG(w,h,body){return '<svg width="100%" viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg">'+DEFS()+body+'</svg>';}
+function Re(x,y,w,h,rx,f,s,sw){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+rx+'" fill="'+f+'" stroke="'+s+'" stroke-width="'+(sw!=null?sw:0.5)+'"/>'; }
+function Ci(cx,cy,r,f,s,sw,extra){ return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+f+'" stroke="'+s+'" stroke-width="'+(sw!=null?sw:1)+'" '+(extra||'')+'/>';}
+/* Text: IBM Plex Mono only in diagrams for crispness */
+function Tx(x,y,anchor,sz,fw,col,t){ return '<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+'" font-size="'+sz+'" font-weight="'+fw+'" fill="'+col+'" font-family="\'IBM Plex Mono\',monospace" dominant-baseline="auto">'+t+'</text>'; }
+function Li(x1,y1,x2,y2,s,sw,da){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+s+'" stroke-width="'+sw+'"'+(da?' stroke-dasharray="'+da+'"':'')+'/>';}
+/* Arrow: tip lands exactly at (x2,y2). Use edge coords. */
+function Ar(x1,y1,x2,y2,s,sw){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+s+'" stroke-width="'+(sw||1.4)+'" marker-end="url(#ah)"/>';}
+/* Axis pair */
+function Axes(ox,oy,w,h,col){ return Ar(ox,oy,ox+w,oy,col,0.5)+Ar(ox,oy,ox,oy-h,col,0.5); }
+/* Dim dashed lines */
+function Dim(x1,y1,x2,y2){ return Li(x1,y1,x2,y2,K.gf,0.5,'3 3'); }
+
+/* ==================== VISUAL 1: y = wx + b ==================== */
+function vNeuron(xv){
+  var W=0.7, B=-0.5, yOut=W*xv+B;
+  /* Layout constants */
+  var INR=20, NR=28, OUTR=20;          /* radii */
+  var INX=50,  NY=72, OX=230, OUTX=310;
+  var INY=72;
+  /* Chart */
+  var CX=400, CY=72, CW=168, CH=90;
+  var cpx=function(v){return CX+(v+4)/8*CW;};
+  var cpy=function(v){return CY+CH/2 - Math.min(Math.max(v,-3),3)/3*(CH/2-6);};
+  var dotX=cpx(xv), dotY=cpy(yOut);
+
+  var s='';
+  /* Input node */
+  s+=Ci(INX,INY,INR,K.bg,K.bgm,0.8);
+  s+=Tx(INX,INY-6,'middle',9,400,K.gl,'input');
+  s+=Tx(INX,INY+7,'middle',11,500,K.bk,xv.toFixed(1));
+  /* Arrow: input right edge → neuron left edge */
+  s+=Ar(INX+INR,INY,NY-NR,INY,K.bk,1.4);
+  s+=Tx((INX+INR+NY-NR)/2,INY-9,'middle',9,400,K.gm,'\u00d7 w=0.7');
+  /* Bias arrow: from top down to neuron top */
+  s+=Ar(NY,INY-NR-22,NY,INY-NR,K.gf,0.9);
+  s+=Tx(NY+5,INY-NR-14,'start',9,400,K.gl,'b=\u22120.5');
+  /* Neuron */
+  s+=Ci(NY,INY,NR,K.cr,K.bk,1.2);
+  s+=Tx(NY,INY-5,'middle',9,400,K.gl,'\u03a3wx+b');
+  s+=Tx(NY,INY+9,'middle',12,600,K.bk,yOut.toFixed(2));
+  /* Arrow: neuron right edge → output node left edge */
+  s+=Ar(NY+NR,INY,OX-OUTR,INY,K.bk,1.4);
+  /* Output node */
+  s+=Ci(OX,INY,OUTR,K.cr,K.bk,1.2);
+  s+=Tx(OX,INY-5,'middle',9,400,K.gl,'output');
+  s+=Tx(OX,INY+9,'middle',11,600,K.bk,yOut.toFixed(2));
+
+  /* Chart: axes */
+  s+=Axes(CX,CY+CH,CW+4,CH+8,K.bgm);
+  s+=Tx(CX+CW+6,CY+CH+3,'start',8,400,K.gf,'x');
+  s+=Tx(CX+2,CY-6,'start',8,400,K.gf,'y');
+  /* zero lines */
+  s+=Dim(cpx(0),CY,cpx(0),CY+CH);
+  s+=Dim(CX,cpy(0),CX+CW,cpy(0));
+  /* function line */
+  var lx1=cpx(-4), ly1=cpy(W*-4+B), lx2=cpx(4), ly2=cpy(W*4+B);
+  s+=Li(lx1,ly1,lx2,ly2,K.bk,2);
+  /* equation label */
+  s+=Tx(CX+CW-2,CY+11,'end',9,400,K.gm,'y=0.7x\u22120.5');
+  /* projection dashed lines */
+  s+=Dim(dotX,dotY,dotX,CY+CH);
+  s+=Dim(CX,dotY,dotX,dotY);
+  /* dot */
+  s+=Ci(dotX,dotY,5,K.cr,K.bk,1.5);
+
+  return '<div class="ctrl-row">'
+    +'<span class="ctrl-label">x = '+xv.toFixed(1)+'</span>'
+    +'<input type="range" min="-4" max="4" step="0.1" value="'+xv+'" oninput="uV01(this.value)" style="flex:1;max-width:220px">'
+    +'<span class="ctrl-val">'+xv.toFixed(1)+'</span>'
+    +'</div>'
+    +SVG(580,186,s)
+    +'<div class="formula">y = 0.7 \u00d7 '+xv.toFixed(1)+' + (\u22120.5) = <strong>'+yOut.toFixed(2)+'</strong></div>';
+}
+
+/* ==================== VISUAL 2: dot product ==================== */
+function vDot(){
+  /* 3 input rects → summation circle → output rect */
+  var IW=58, IH=28, IR=4;        /* input rect size */
+  var NR=32;                      /* neuron radius */
+  var INX=10, NX=210, OX=290, OW=74, OH=28;
+  var rows=[{y:28,n:'x\u2081',v:'0.4',w:'w\u2081=0.8'},
+            {y:82,n:'x\u2082',v:'0.7',w:'w\u2082=0.3'},
+            {y:136,n:'x\u2083',v:'0.1',w:'w\u2083=\u22120.6'}];
+  var NY=rows[1].y+IH/2;  /* neuron center = middle input centre */
+
+  var s='';
+  /* Compute for panel */
+  var sum=0.8*0.4+0.3*0.7-0.6*0.1;
+
+  rows.forEach(function(r,i){
+    var ry=r.y, cx=INX+IW/2, cy=ry+IH/2;
+    /* Input rect */
+    s+=Re(INX,ry,IW,IH,3,K.bg,K.bgm,0.6);
+    s+=Tx(cx,ry+10,'middle',9,400,K.gl,r.n);
+    s+=Tx(cx,ry+22,'middle',11,500,K.bk,r.v);
+    /* Weight label at midpoint of edge */
+    var mx=(INX+IW+NX-NR)/2, my=(cy+NY)/2;
+    s+=Ar(INX+IW,cy,NX-NR,NY,K.bk,1.1);
+    s+=Re(mx-19,my-8,38,13,2,K.wh,K.gf,0.5);
+    s+=Tx(mx,my+3,'middle',8,400,K.gl,r.w);
+  });
+
+  /* Neuron */
+  s+=Ci(NX,NY,NR,K.cr,K.bk,1.2);
+  s+=Tx(NX,NY-8,'middle',9,400,K.gl,'\u03a3 w\u1d62x\u1d62+b');
+  s+=Tx(NX,NY+8,'middle',12,600,K.bk,'= '+sum.toFixed(2));
+  /* Arrow: neuron right → output rect left */
+  s+=Ar(NX+NR,NY,OX,NY,K.bk,1.4);
+  /* Output rect */
+  s+=Re(OX,NY-OH/2,OW,OH,3,K.cr,K.bk,0.9);
+  s+=Tx(OX+OW/2,NY-5,'middle',9,400,K.gl,'output');
+  s+=Tx(OX+OW/2,NY+8,'middle',12,600,K.bk,sum.toFixed(2));
+
+  /* Annotation box */
+  var bx=386, by=12, bw=186, bh=130;
+  s+=Re(bx,by,bw,bh,4,K.bg,K.bgm);
+  s+=Tx(bx+bw/2,by+17,'middle',10,600,K.bk,'dot product');
+  s+=Tx(bx+10,by+35,'start',9,400,K.gm,'y = \u03a3 w\u1d62x\u1d62 + b');
+  s+=Tx(bx+10,by+51,'start',9,400,K.gm,'= 0.8\u00d70.4 + 0.3\u00d70.7');
+  s+=Tx(bx+10,by+67,'start',9,400,K.gm,'  \u2212 0.6\u00d70.1 + b');
+  s+=Tx(bx+10,by+83,'start',9,500,K.bk,'  = '+sum.toFixed(2)+' (+ bias b)');
+  s+=Tx(bx+10,by+103,'start',8,400,K.gf,'Geometrically: one flat hyperplane');
+  s+=Tx(bx+10,by+117,'start',8,400,K.gf,'through n-dimensional space.');
+
+  return SVG(580,180,s);
+}
+
+/* ==================== VISUAL 3: activation functions ==================== */
+function vAct(fn){
+  var fns={
+    linear:function(v){return v;},
+    relu:  function(v){return Math.max(0,v);},
+    sigmoid:function(v){return 1/(1+Math.exp(-v));}
+  };
+  var names={linear:'Linear',relu:'ReLU',sigmoid:'Sigmoid'};
+  var info={
+    linear:['y = x','Output = input, no change.','linear \u2218 linear = still linear.','Stacking adds zero expressiveness.'],
+    relu:  ['y = max(0, x)','Zeros negatives, keeps positives.','Sparse, fast, works deep.','Most widely used today. \u2713'],
+    sigmoid:['y = 1 / (1 + e\u207b\u02e3)','Squashes output to (0, 1).','Good for final probability layers.','Vanishing gradients deep in. \u26a0']
+  };
+  /* Chart area: origin at (50, 104), range x \u22124..4, y \u22122..2 */
+  var OX=50, OY=104, XR=170, YR=72;
+  function cx(v){return OX+(v+4)/8*XR;}
+  function cy(v){return OY-Math.min(Math.max(v,-2),2)/2*YR;}
+
+  /* Build path for each function */
+  function mkPath(k){
+    var pts=[];
+    for(var v=-4.1;v<=4.1;v+=0.06){
+      var yv=fns[k](v);
+      var px=cx(v), py=cy(yv);
+      pts.push(px.toFixed(1)+','+py.toFixed(1));
+    }
+    return 'M'+pts.join('L');
+  }
+
+  var s='';
+  /* Axes */
+  s+=Axes(OX,OY,XR+4,YR+10,K.bgm);
+  s+=Tx(OX+XR+6,OY+3,'start',8,400,K.gf,'x');
+  s+=Tx(OX+2,OY-YR-8,'start',8,400,K.gf,'y');
+  /* Zero grid */
+  s+=Dim(cx(0),OY-YR-4,cx(0),OY);
+  s+=Dim(OX,cy(0),OX+XR,cy(0));
+  s+=Tx(cx(0)-3,OY+10,'middle',8,400,K.gf,'0');
+  /* x-axis tick labels */
+  [-4,-2,2,4].forEach(function(v){s+=Tx(cx(v),OY+10,'middle',8,400,K.gf,v>0?'+'+v:v);});
+  /* Draw faded curves first, active on top */
+  var keys=['linear','relu','sigmoid'];
+  /* faded */
+  keys.forEach(function(k){
+    if(k===fn)return;
+    s+='<path d="'+mkPath(k)+'" fill="none" stroke="'+K.bk+'" stroke-width="0.8" opacity="0.12"/>';
+  });
+  /* active */
+  s+='<path d="'+mkPath(fn)+'" fill="none" stroke="'+K.bk+'" stroke-width="2.5"/>';
+
+  /* Activation buttons */
+  var btns='<div style="margin-bottom:12px">';
+  keys.forEach(function(k){
+    var active=fn===k;
+    btns+='<button class="act-btn" onclick="setFn(\''+k+'\')" style="background:'+(active?K.bk:K.bg)+';border:1px solid '+(active?K.bk:K.bgm)+';color:'+(active?K.wh:K.gl)+';font-weight:'+(active?500:400)+'">'+names[k]+'</button>';
+  });
+  btns+='</div>';
+
+  /* Info panel */
+  var px2=260, py2=12, pw=310, ph=132;
+  s+=Re(px2,py2,pw,ph,4,K.bg,K.bgm);
+  s+=Tx(px2+pw/2,py2+18,'middle',11,600,K.bk,names[fn]+' activation');
+  var d=info[fn];
+  for(var i=0;i<d.length;i++){
+    s+=Tx(px2+12,py2+36+i*22,'start',9,400,i===0?K.bk:i===3?K.gm:K.gl,d[i]);
+  }
+
+  return btns+SVG(580,158,s);
+}
+
+/* ==================== VISUAL 4: linear separability ==================== */
+function vLinSep(){
+  /* Scatter plot: class A (cream circles), class B (dark circles) */
+  var OX=40, OY=185, XR=220, YR=155;
+  function px(v){return OX+v/5.5*XR;}
+  function py(v){return OY-v/4.5*YR;}
+  var pos=[[1.2,2.8],[1.8,3.1],[2.2,2.6],[1.5,3.4],[2.0,3.8]];
+  var neg=[[3.5,1.2],[4.0,0.8],[3.8,1.6],[4.4,1.0],[3.2,0.5]];
+  var s='';
+  s+=Axes(OX,OY,XR+6,YR+8,K.bgm);
+  s+=Tx(OX+XR+8,OY+3,'start',9,400,K.gf,'x\u2081');
+  s+=Tx(OX+2,OY-YR-8,'start',9,400,K.gf,'x\u2082');
+  /* Decision boundary: line from approx (1.5, 4) to (4.5, 1) in data space */
+  s+=Li(px(1.3),py(4.0),px(4.7),py(0.6),K.bk,1.6,'6 3');
+  s+=Re(px(3.6),py(3.6)-8,106,14,2,K.wh,K.gf,0.4);
+  s+=Tx(px(3.6)+4,py(3.6)+2,'start',9,400,K.gm,'decision boundary');
+  /* Data points */
+  pos.forEach(function(p){s+=Ci(px(p[0]),py(p[1]),9,K.cr,K.bk,1.4);});
+  neg.forEach(function(p){s+=Ci(px(p[0]),py(p[1]),9,K.gd,K.bk,1);});
+  /* Legend */
+  s+=Ci(OX+4,OY-YR+8,7,K.cr,K.bk,1.4);
+  s+=Tx(OX+16,OY-YR+12,'start',9,400,K.gm,'class A');
+  s+=Ci(OX+4+64,OY-YR+8,7,K.gd,K.bk,1);
+  s+=Tx(OX+16+64,OY-YR+12,'start',9,400,K.gm,'class B');
+
+  /* Info panel */
+  var bx=290, by=18, bw=280, bh=164;
+  s+=Re(bx,by,bw,bh,4,K.bg,K.bgm);
+  s+=Tx(bx+bw/2,by+18,'middle',11,600,K.bk,'one neuron \u2192 one boundary');
+  [
+    'A neuron with n inputs draws',
+    'exactly one flat hyperplane.',
+    '',
+    'One side \u2192 class A.',
+    'Other side \u2192 class B.',
+    '',
+    'Works when classes are linearly',
+    'separable by a flat cut.'
+  ].forEach(function(line,i){
+    if(!line)return;
+    s+=Tx(bx+12,by+36+i*17,'start',9,400,i===7?K.bk:K.gm,line);
+  });
+
+  return SVG(580,215,s);
+}
+
+/* ==================== VISUAL 5: XOR ==================== */
+function vXOR(){
+  var OX=44, OY=190, XR=175, YR=150;
+  function px(v){return OX+(v-0.5)/3*XR;}
+  function py(v){return OY-(v-0.5)/3*YR;}
+  var pts=[{x:0,y:0,o:0},{x:3,y:0,o:1},{x:0,y:3,o:1},{x:3,y:3,o:0}];
+  var s='';
+  s+=Axes(OX,OY,XR+8,YR+8,K.bgm);
+  s+=Tx(OX+XR+10,OY+3,'start',9,400,K.gf,'x\u2081');
+  s+=Tx(OX+2,OY-YR-8,'start',9,400,K.gf,'x\u2082');
+  /* tick labels */
+  [0,3].forEach(function(v,i){
+    s+=Tx(px(v),OY+11,'middle',9,400,K.gf,i===0?'0':'1');
+    s+=Tx(OX-6,py(v)+3,'end',9,400,K.gf,i===0?'0':'1');
+  });
+  /* Mid grid lines */
+  s+=Dim(px(1.5),OY-YR+4,px(1.5),OY);
+  s+=Dim(OX,py(1.5),OX+XR,py(1.5));
+  s+=Tx(px(1.5)+4,py(1.5)-8,'start',9,400,K.gl,'no line works \u2715');
+  /* Data points */
+  pts.forEach(function(p){
+    s+=Ci(px(p.x),py(p.y),22,p.o?K.cr:K.gd,K.bk,1.6);
+    s+=Tx(px(p.x),py(p.y)+7,'middle',17,600,p.o?K.bk:K.wh,p.o.toString());
+  });
+
+  /* Info panel */
+  var bx=286, by=14, bw=284, bh=180;
+  s+=Re(bx,by,bw,bh,4,K.bg,K.bgm);
+  s+=Tx(bx+bw/2,by+18,'middle',11,600,K.bk,'XOR: not linearly separable');
+  [
+    'XOR = 1 when inputs differ,',
+    '      0 when they match.',
+    '',
+    '(0,0)\u21920    (1,1)\u21920',
+    '(0,1)\u21921    (1,0)\u21921',
+    '',
+    'The 0s sit at opposite corners.',
+    'No straight line separates them.',
+    '',
+    'Proved in 1969 \u2192 first AI winter.',
+    'Fix: multiple neurons + layers.'
+  ].forEach(function(line,i){
+    if(!line)return;
+    var bold=i>=9;
+    s+=Tx(bx+12,by+34+i*14,'start',9,bold?500:400,bold?K.bk:i<3?K.gm:i<6?K.gd:K.gm,line);
+  });
+
+  return SVG(580,220,s);
+}
+
+/* ==================== VISUAL 6: single hidden layer ==================== */
+function vLayer(){
+  /* Input layer: 3 circles at cx=52, radii=18
+     Hidden layer: 3 circles at cx=220, radii=28
+     Output neuron: circle at cx=390, radii=24
+     Result box: rect at x=430 */
+  var INR=18, HR=28, OR=24;
+  var INX=52, HX=220, OUTX=390, RESX=432;
+  var inY=[36,92,148], hidY=[36,92,148], outY=92;
+  var RESY=92, RW=76, RH=28;
+
+  var s='';
+  s+=Tx(HX,10,'middle',9,400,K.gf,'each neuron asks a different question about the same inputs');
+
+  /* Edges: input right edges → hidden left edges */
+  inY.forEach(function(iy){
+    hidY.forEach(function(hy){
+      s+=Li(INX+INR,iy,HX-HR,hy,K.bk,0.5,'','opacity="0.12"');
+    });
+  });
+  /* Edges: hidden right edges → output left edge */
+  hidY.forEach(function(hy){
+    s+=Li(HX+HR,hy,OUTX-OR,outY,K.bk,0.7,'','opacity="0.3"');
+  });
+  /* Arrow from output to result box */
+  s+=Ar(OUTX+OR,outY,RESX,RESY,K.bk,1.4);
+
+  /* Input circles */
+  inY.forEach(function(y,i){
+    s+=Ci(INX,y,INR,K.bg,K.bgm,0.7);
+    s+=Tx(INX,y+4,'middle',10,400,K.gl,'x\u2081\u2082\u2083'[i]||('x'+(i+1)));
+  });
+  s+=Tx(INX,184,'middle',9,400,K.gf,'inputs');
+
+  /* Hidden neurons */
+  var qs=['x\u2081 > x\u2083?','x\u2082 large?','all > 0?'];
+  hidY.forEach(function(y,i){
+    s+=Ci(HX,y,HR,K.cr,K.bk,1.1);
+    s+=Tx(HX,y-5,'middle',9,400,K.gl,'n'+(i+1));
+    s+=Tx(HX,y+8,'middle',8,400,K.gm,qs[i]);
+  });
+  s+=Tx(HX,184,'middle',9,400,K.gm,'hidden layer');
+
+  /* Output neuron */
+  s+=Ci(OUTX,outY,OR,K.cr,K.bk,1.2);
+  s+=Tx(OUTX,outY-4,'middle',8,400,K.gl,'combine');
+  s+=Tx(OUTX,outY+9,'middle',8,400,K.gl,'outputs');
+  s+=Tx(OUTX,184,'middle',9,400,K.gm,'output');
+
+  /* Result box */
+  s+=Re(RESX,RESY-RH/2,RW,RH,3,K.cr,K.bk,0.9);
+  s+=Tx(RESX+RW/2,RESY-4,'middle',9,400,K.gl,'result');
+  s+=Tx(RESX+RW/2,RESY+9,'middle',12,600,K.bk,'\u0177');
+
+  return SVG(580,196,s);
+}
+
+/* ==================== VISUAL 7: deep network ==================== */
+function vNet(){
+  var layers=[
+    {x:45, n:3, lb:'input',   sub:''},
+    {x:165,n:4, lb:'layer 1', sub:'raw features'},
+    {x:285,n:4, lb:'layer 2', sub:'combinations'},
+    {x:405,n:3, lb:'layer 3', sub:'abstractions'},
+    {x:520,n:1, lb:'output',  sub:''},
+  ];
+  var NR=13;
+  function ny(n,i){var sp=n>1?116/(n-1):0;var top=(116-(n-1)*sp)/2+32;return top+i*sp;}
+
+  var s='';
+  s+=Tx(290,18,'middle',9,400,K.gf,'each layer transforms what the previous layer learned');
+
+  /* Edges first (behind nodes) */
+  for(var li=0;li<layers.length-1;li++){
+    var L=layers[li], NL=layers[li+1];
+    for(var i=0;i<L.n;i++){
+      for(var j=0;j<NL.n;j++){
+        var op=(0.05+li*0.05).toFixed(2);
+        s+='<line x1="'+(L.x+NR)+'" y1="'+ny(L.n,i).toFixed(1)+'" x2="'+(NL.x-NR)+'" y2="'+ny(NL.n,j).toFixed(1)+'" stroke="'+K.bk+'" stroke-width="0.5" opacity="'+op+'"/>';
+      }
+    }
+  }
+
+  /* Nodes */
+  for(var li=0;li<layers.length;li++){
+    var L=layers[li], isOut=li===layers.length-1, isIn=li===0;
+    for(var i=0;i<L.n;i++){
+      var fill=isOut?K.bk:isIn?K.bg:K.cr;
+      var stroke=K.bk, sw=isOut?1.5:0.8;
+      s+=Ci(L.x,ny(L.n,i).toFixed(1),NR,fill,stroke,sw);
+    }
+    s+=Tx(L.x,172,'middle',9,500,K.bk,L.lb);
+    if(L.sub)s+=Tx(L.x,183,'middle',8,400,K.gl,L.sub);
+  }
+
+  return SVG(580,196,s);
+}
+
+/* ==================== VISUAL 8: gradient descent ==================== */
+function vGrad(pos,lr,hist){
+  function loss(w){return (w-2)*(w-2)+0.4*Math.sin(3*w);}
+  function grad(w){return 2*(w-2)+1.2*Math.cos(3*w);}
+  /* Chart: x = weight 0..5, y = loss 0..8 */
+  var OX=32, OY=134, XR=230, YR=116;
+  function cx(w){return OX+w/5*XR;}
+  function cy(v){return OY-Math.min(Math.max(v,0),8)/8*YR;}
+
+  /* Loss curve polyline */
+  var pts=[];
+  for(var w=0;w<=5;w+=0.04)pts.push(cx(w).toFixed(1)+','+cy(loss(w)).toFixed(1));
+
+  var g=grad(pos), newW=pos-lr*g;
+  var bx=cx(pos), by=cy(loss(pos));
+  var dir=-Math.sign(g), alen=Math.min(Math.abs(g)*20,46);
+
+  var s='';
+  /* Axes */
+  s+=Axes(OX,OY,XR+6,YR+8,K.bgm);
+  s+=Tx(OX+XR+8,OY+4,'start',8,400,K.gf,'weight');
+  s+=Tx(OX+2,OY-YR-8,'start',8,400,K.gf,'loss');
+  /* Optimal vertical */
+  s+=Dim(cx(2),OY-YR,cx(2),OY);
+  s+=Tx(cx(2),OY+11,'middle',8,400,K.gl,'optimal');
+  /* Loss curve */
+  s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+K.bk+'" stroke-width="2"/>';
+  /* Trail dots (fading) */
+  var trail=hist.slice(-9);
+  for(var ti=0;ti<trail.length;ti++){
+    var op=(0.08+ti/trail.length*0.5).toFixed(2);
+    s+=Ci(cx(trail[ti]),cy(loss(trail[ti])),3.5,K.bk,K.bk,0,'opacity="'+op+'"');
+  }
+  /* Gradient arrow */
+  s+=Ar(bx,by,bx+dir*alen,by,K.bk,1.6);
+  s+=Tx(bx+dir*(alen/2+2),by-10,'middle',9,400,K.gm,'gradient');
+  /* Current position dot */
+  s+=Ci(bx,by,7,K.cr,K.bk,1.6);
+
+  /* Info panel */
+  var px=286, py=10, pw=286, ph=128;
+  s+=Re(px,py,pw,ph,4,K.bg,K.bgm);
+  s+=Tx(px+pw/2,py+18,'middle',11,600,K.bk,'gradient descent');
+  var info=[
+    ['weight w:',  pos.toFixed(3)],
+    ['loss L(w):',  loss(pos).toFixed(3)],
+    ["gradient L':", g.toFixed(3)],
+  ];
+  info.forEach(function(row,i){
+    s+=Tx(px+12,py+36+i*20,'start',9,400,K.gl,row[0]);
+    s+=Tx(px+pw-10,py+36+i*20,'end',9,500,K.bk,row[1]);
+  });
+  s+=Li(px+10,py+96,px+pw-10,py+96,K.gf,0.5);
+  s+=Tx(px+12,py+110,'start',8,400,K.gf,'w\u2190 w \u2212 lr \u00d7 gradient');
+  s+=Tx(px+12,py+122,'start',8,400,K.gf,'= '+pos.toFixed(2)+' \u2212 '+lr+' \u00d7 '+g.toFixed(2)+' = '+newW.toFixed(3));
+
+  return SVG(580,152,s)
+    +'<div class="ctrl-row">'
+    +'<button class="btn-c solid" onclick="stepGD()">Take a step</button>'
+    +'<button class="btn-c outline" onclick="resetGD()">Reset</button>'
+    +'<span class="ctrl-label">lr =</span>'
+    +'<input type="range" min="0.05" max="0.9" step="0.05" value="'+lr+'" oninput="setLR(this.value)" style="width:100px">'
+    +'<span class="ctrl-val">'+lr.toFixed(2)+'</span>'
+    +'</div>'
+    +'<span class="hint">Try learning rate above 0.6 to watch it overshoot and oscillate</span>';
+}
+
+/* ==================== VISUAL 9: feature hierarchy ==================== */
+function vHier(){
+  /* 4 boxes with arrows between them, evenly spaced */
+  var boxes=[
+    {lb:'layer 1', sub:'low-level',  feats:['edges','gradients','blobs']},
+    {lb:'layer 2', sub:'mid-level',  feats:['corners','curves','stripes']},
+    {lb:'layer 3', sub:'high-level', feats:['eyes','noses','ears']},
+    {lb:'output',  sub:'',           feats:['face']},
+  ];
+  var BW=118, GAP=20, BH_PER_FEAT=22, PAD=26;
+  var totalW=boxes.length*BW+(boxes.length-1)*GAP;
+  var startX=Math.floor((580-totalW)/2);
+  var midY=80;
+
+  var s='';
+  s+=Tx(290,12,'middle',9,400,K.gf,'each layer detects increasingly abstract features');
+  s+=Tx(290,165,'middle',8,400,K.gf,'input: raw pixels');
+
+  boxes.forEach(function(box,idx){
+    var bx=startX+idx*(BW+GAP);
+    var bh=box.feats.length*BH_PER_FEAT+PAD;
+    var by=midY-bh/2;
+    var isOut=idx===3;
+
+    /* Box */
+    s+=Re(bx,by,BW,bh,4,isOut?K.bk:K.bg,K.bk,isOut?1.5:0.6);
+
+    /* Feature labels */
+    box.feats.forEach(function(f,fi){
+      s+=Tx(bx+BW/2,by+18+fi*BH_PER_FEAT,'middle',10,400,isOut?K.wh:K.gm,f);
+    });
+
+    /* Layer label below */
+    s+=Tx(bx+BW/2,148,'middle',9,500,K.bk,box.lb);
+    if(box.sub)s+=Tx(bx+BW/2,160,'middle',8,400,K.gl,box.sub);
+
+    /* Arrow to next box: right edge → next left edge */
+    if(idx<boxes.length-1){
+      var nextX=bx+BW+GAP;
+      s+=Ar(bx+BW,midY,nextX,midY,K.bgd,1.2);
+    }
+  });
+
+  return SVG(580,178,s);
+}
+
+/* ==================== VISUAL 10: RNN memory fade ==================== */
+function vRNN(){
+  var words=["The","animal","didn\u2019t","cross","the","street","because","it"];
+  /* Tokens: uniform width, vertically centered */
+  var TW=52, TH=26, TR=3;
+  var totalW=words.length*TW+(words.length-1)*6;
+  var startX=Math.floor((580-totalW)/2);
+  var TY=72;
+
+  function tx(i){return startX+i*(TW+6)+TW/2;}
+
+  var s='';
+  /* Arcs from "it" (index 7) back to each prior word */
+  for(var i=0;i<7;i++){
+    var dist=7-i;
+    var opa=(i===1?0.85:Math.max(0.05,0.45-dist*0.055)).toFixed(2);
+    var sw=(i===1?2.5:Math.max(0.4,1.5-dist*0.17)).toFixed(1);
+    var cpyA=TY-dist*9-4;
+    s+='<path d="M'+tx(7)+','+(TY-TH/2)+' Q'+((tx(7)+tx(i))/2)+','+cpyA+' '+tx(i)+','+(TY-TH/2)+'" fill="none" stroke="'+K.bk+'" stroke-width="'+sw+'" opacity="'+opa+'"/>';
+  }
+
+  /* Token boxes */
+  words.forEach(function(w,i){
+    var isIt=i===7, isAn=i===1;
+    var bx=startX+i*(TW+6);
+    s+=Re(bx,TY-TH/2,TW,TH,TR,isIt?K.bk:isAn?K.cr:K.bg,K.bk,isIt?1.5:0.6);
+    s+=Tx(tx(i),TY+4,'middle',10,isIt?500:400,isIt?K.wh:K.bk,w);
+  });
+
+  /* Labels */
+  s+=Tx(tx(7),TY+TH/2+13,'middle',9,500,K.gm,'query: \u201cit\u201d');
+  s+=Tx(tx(1),TY+TH/2+13,'middle',9,400,K.gl,'\u2190 refers to?');
+
+  /* Memory decay bar */
+  var barY=108, barX=startX, barW=totalW;
+  s+='<defs><linearGradient id="fgBW" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="'+K.bk+'" stop-opacity="0.55"/><stop offset="100%" stop-color="'+K.bk+'" stop-opacity="0.04"/></linearGradient></defs>';
+  s+=Re(barX,barY,barW,8,3,'url(#fgBW)',K.bgm,0.3);
+  s+=Tx(barX,barY-3,'start',8,400,K.gm,'strong memory');
+  s+=Tx(barX+barW,barY-3,'end',8,400,K.gf,'faded');
+
+  s+=Tx(290,130,'middle',10,600,K.bk,'RNN: memory decays with distance');
+  s+=Tx(290,146,'middle',9,300,K.gm,'Context is compressed into one fixed vector \u2014 distant signals get overwritten.');
+
+  return SVG(580,162,s);
+}
+
+/* ==================== VISUAL 11: attention ==================== */
+var ATTN_M=[
+  [0.70,0.10,0.06,0.06,0.05,0.02,0.01],
+  [0.15,0.52,0.10,0.05,0.10,0.05,0.03],
+  [0.08,0.10,0.48,0.20,0.06,0.05,0.03],
+  [0.08,0.05,0.05,0.60,0.12,0.06,0.04],
+  [0.05,0.60,0.08,0.07,0.08,0.07,0.05],
+  [0.05,0.22,0.05,0.05,0.22,0.35,0.06],
+  [0.04,0.26,0.05,0.05,0.22,0.30,0.08],
+];
+
+function vAttn(query){
+  var words=["The","animal","cross","the","it","was","tired"];
+  var TW=60, TH=26, TR=3;
+  var totalW=words.length*TW+(words.length-1)*4;
+  var startX=Math.floor((580-totalW)/2);
+  var TY=84;
+  function tx(i){return startX+i*(TW+4)+TW/2;}
+
+  var s='';
+  /* Attention arcs */
+  for(var i=0;i<words.length;i++){
+    var a=ATTN_M[query][i];
+    if(a<0.04)continue;
+    var sw=(a*9).toFixed(1);
+    var opa=(0.06+a*0.94).toFixed(2);
+    var dist=Math.abs(query-i);
+    var cpyA=TY-TH/2-dist*9-6;
+    s+='<path d="M'+tx(query)+','+(TY-TH/2)+' Q'+((tx(query)+tx(i))/2)+','+cpyA+' '+tx(i)+','+(TY-TH/2)+'" fill="none" stroke="'+K.bk+'" stroke-width="'+sw+'" opacity="'+opa+'"/>';
+  }
+  /* Score labels */
+  for(var i=0;i<words.length;i++){
+    var a=ATTN_M[query][i];
+    if(a<0.15||i===query)continue;
+    var dist=Math.abs(query-i);
+    var lx=(tx(query)+tx(i))/2;
+    var ly=TY-TH/2-dist*9-18;
+    s+=Re(lx-12,ly-8,24,12,2,K.wh,K.gf,0.5);
+    s+=Tx(lx,ly+2,'middle',8,400,K.gm,Math.round(a*100)+'%');
+  }
+  /* Token boxes */
+  for(var i=0;i<words.length;i++){
+    var a=ATTN_M[query][i];
+    var isQ=i===query, isHK=a>0.28&&i!==query;
+    var bx=startX+i*(TW+4);
+    s+='<g onclick="setQ('+i+')" style="cursor:pointer">';
+    s+=Re(bx,TY-TH/2,TW,TH,TR,isQ?K.bk:isHK?K.cr:K.bg,K.bk,isQ?1.5:0.6);
+    s+=Tx(tx(i),TY+4,'middle',11,isQ?500:400,isQ?K.wh:K.bk,words[i]);
+    s+='</g>';
+  }
+  s+=Tx(tx(query),TY+TH/2+13,'middle',9,500,K.gm,'query: \u201c'+words[query]+'\u201d');
+  s+=Tx(290,120,'middle',9,400,K.gl,'line thickness = attention weight \u2014 how strongly \u201c'+words[query]+'\u201d attends to each word');
+
+  return '<span class="click-hint">Click any word to explore its attention pattern</span>'+SVG(580,136,s);
+}
+
+/* ==================== VISUAL 12: transformer + LLMs ==================== */
+function vTransf(){
+  /* Left: transformer stack schematic. Right: tradeoffs panel. */
+  var s='';
+
+  /* Input tokens */
+  var toks=[["The",44],["cat",114],["sat",184]];
+  toks.forEach(function(t){
+    var w=t[0], x=t[1];
+    s+=Re(x,182,54,22,3,K.bg,K.bgm,0.5);
+    s+=Tx(x+27,197,'middle',10,400,K.gl,w);
+    /* Arrow up: token top → block bottom */
+    s+=Ar(x+27,182,x+27,168,K.bgm,0.6);
+  });
+
+  /* Transformer block box */
+  var BX=20, BY=36, BW=206, BH=130;
+  s+=Re(BX,BY,BW,BH,4,K.bg,K.bgm,0.5);
+
+  /* Layer stripes inside block */
+  var stripes=['attn','ff','attn','ff','attn','ff'];
+  stripes.forEach(function(type,li){
+    var sy=BY+BH-14-li*18;
+    var isA=type==='attn';
+    var op=(0.22+li*0.11).toFixed(2);
+    s+='<rect x="'+(BX+8)+'" y="'+sy+'" width="'+(BW-16)+'" height="12" rx="2" fill="'+(isA?K.gd:K.gf)+'" opacity="'+op+'"/>';
+    if(li===0)s+=Tx(BX+BW/2,sy+8,'middle',7,400,K.wh,'attention');
+    if(li===1)s+=Tx(BX+BW/2,sy+8,'middle',7,400,K.gd,'feed-forward');
+  });
+  s+=Tx(BX+BW/2,BY+14,'middle',9,400,K.gl,'\u00d7 N transformer blocks');
+
+  /* Arrow: block top → prediction */
+  s+=Ar(BX+BW/2,BY,BX+BW/2,BY-12,K.bgm,0.7);
+  s+=Re(BX+38,BY-30,130,20,3,K.cr,K.bk,0.9);
+  s+=Tx(BX+BW/2,BY-16,'middle',10,400,K.bk,'\u201con\u201d  (next token predicted)');
+
+  /* Tradeoffs panel */
+  var PX=244, PY=8, PW=328, PH=202;
+  s+=Re(PX,PY,PW,PH,4,K.bg,K.bgm);
+  s+=Tx(PX+PW/2,PY+18,'middle',11,600,K.bk,'LLM properties & tradeoffs');
+  s+=Li(PX+12,PY+26,PX+PW-12,PY+26,K.gf,0.5);
+
+  var rows=[
+    ['Context window',    'fixed token window (~128K tokens)'],
+    ['Hallucination',     'plausible \u2260 true; no fact lookup'],
+    ['Compute cost',      'billions of params; massive clusters'],
+    ['Emergent abilities','arise from scale, not programming'],
+    ['Alignment',        '"helpful but safe" is unsolved'],
+  ];
+  rows.forEach(function(row,i){
+    var ry=PY+40+i*32;
+    var op=(1-i*0.12).toFixed(2);
+    s+=Ci(PX+14,ry+5,4,K.bk,K.bk,0,'opacity="'+op+'"');
+    s+=Tx(PX+24,ry+9,'start',10,600,K.bk,row[0]);
+    s+=Tx(PX+24,ry+21,'start',9,400,K.gl,row[1]);
+  });
+
+  return SVG(580,218,s);
+}
+
+/* ==================== STEPS ==================== */
+var STEPS=[
+  {tag:'single neuron',     title:'A neuron is just y\u00a0=\u00a0wx\u00a0+\u00a0b',
+   body:[{l:1,t:'You already know the equation of a line: y\u00a0=\u00a0mx\u00a0+\u00a0b. An artificial neuron is exactly that. It takes an input x, multiplies it by a weight w (the slope), adds a bias b (the intercept), and produces an output. That is the entire computation of one neuron.'},
+         {l:0,t:'The weight controls how strongly the neuron reacts to its input. The bias shifts the output up or down regardless of x. Every single parameter in every neural network \u2014 and in every LLM \u2014 is either a weight or a bias. Drag the slider to watch the neuron compute in real time.'}],
+   render:function(){return vNeuron(ST.v01);}},
+  {tag:'multiple inputs',   title:'Many inputs: the dot product',
+   body:[{l:1,t:'Real data has many features \u2014 pixel brightness, word frequency, temperature. A neuron handles all of them at once: multiply each input by its own weight, then sum everything. y\u00a0=\u00a0w\u2081x\u2081\u00a0+\u00a0w\u2082x\u2082\u00a0+\u00a0w\u2083x\u2083\u00a0+\u00a0b. This is the dot product.'},
+         {l:0,t:'Geometrically, a single neuron with n inputs draws a hyperplane \u2014 one flat (n\u22121)-dimensional surface. In 2D it is a line. In 3D a flat plane. In 1000 dimensions: still exactly one flat cut. That is the hard constraint of one neuron.'}],
+   render:function(){return vDot();}},
+  {tag:'activation functions',title:'Adding a bend: activation functions',
+   body:[{l:1,t:'Here is the critical problem: stacking linear operations (wx\u00a0+\u00a0b) always collapses into one linear operation. A 100-layer network with no activation function is mathematically identical to a single linear layer. No matter how many layers you add, you get no additional expressiveness.'},
+         {l:0,t:'The fix is wrapping each neuron\u2019s output in a non-linear function before passing it forward. This introduces a bend. Now stacking layers genuinely compounds complexity \u2014 each layer carves increasingly curved and complex boundaries. Compare the three most common activation functions below.'}],
+   render:function(){return vAct(ST.v03);}},
+  {tag:'neuron limits',     title:'What one neuron can \u2014 and cannot \u2014 do',
+   body:[{l:1,t:'A single neuron draws one flat cut through the input space. Everything on one side is class A; everything on the other is class B. If two classes are separated by a flat boundary, one neuron classifies them perfectly. This handles a surprisingly large number of real problems.'},
+         {l:0,t:'But the constraint is inescapable: one neuron, one flat boundary. What happens when the data cannot be separated this way? We need a concrete example that makes this limit visible and forces us to think about what comes next.'}],
+   render:function(){return vLinSep();}},
+  {tag:'XOR problem',       title:'XOR: one cut is never enough',
+   body:[{l:1,t:'XOR outputs 1 when its two inputs differ, and 0 when they match. Plot the four cases: (0,0)\u21920 and (1,1)\u21920 sit at opposite corners of a 2D grid. (0,1)\u21921 and (1,0)\u21921 sit at the other corners. Try to draw a single straight line that separates 0s from 1s.'},
+         {l:0,t:'It is impossible. Proven formally in 1969, this triggered the first AI winter. The solution was simple: use multiple neurons in parallel. Each draws its own partial boundary. Together they can represent any shape whatsoever \u2014 including XOR. This is the reason we need layers.'}],
+   render:function(){return vXOR();}},
+  {tag:'a layer',           title:'One layer: neurons working in parallel',
+   body:[{l:1,t:'Instead of one neuron deciding everything alone, run many neurons simultaneously on the same inputs. Each neuron has its own set of weights, so each implicitly asks a different question about the data.'},
+         {l:0,t:'One neuron might detect whether x\u2081 is larger than x\u2083. Another whether x\u2082 is unusually large. A third whether all inputs are positive. Their outputs feed into the next layer \u2014 which can now answer questions that no single neuron could handle alone. This is the power of width.'}],
+   render:function(){return vLayer();}},
+  {tag:'deep networks',     title:'Stacking layers: depth compounds abstraction',
+   body:[{l:1,t:'Each layer\u2019s outputs become the next layer\u2019s inputs. Layer 2 detects patterns in what layer 1 detected \u2014 combinations of combinations. Add more layers and abstractions build on abstractions. This is the central idea of deep learning.'},
+         {l:0,t:'The Universal Approximation Theorem guarantees even one hidden layer can represent any continuous function in principle. But deep networks achieve this with exponentially fewer neurons, and in a structured, reusable way. Depth is not just efficiency \u2014 it is the architecture that made modern AI possible.'}],
+   render:function(){return vNet();}},
+  {tag:'training',          title:'Finding the weights: gradient descent',
+   body:[{l:1,t:'A brand-new network has random weights and makes terrible predictions. We measure the error with a loss function \u2014 a single number that quantifies how wrong the network is. Then we ask: if I nudge each weight slightly, does the loss go up or down? The gradient answers this for every weight simultaneously.'},
+         {l:0,t:'We shift all weights a small amount in the direction that reduces loss, then repeat millions of times across millions of examples. This is gradient descent. The step size is the learning rate: too small means slow training; too large means the update overshoots and oscillates. Press \u201cTake a step\u201d and try lr above 0.6.'}],
+   render:function(){return vGrad(ST.v08pos,ST.v08lr,ST.v08hist);}},
+  {tag:'feature hierarchy', title:'What deep networks actually learn',
+   body:[{l:1,t:'A shallow network trying to recognize faces must leap from raw pixel values directly to \u201cface.\u201d Deep networks build a reusable vocabulary instead: layer 1 detects edges, layer 2 assembles them into curves and corners, layer 3 recognizes eyes and noses.'},
+         {l:0,t:'This is not just quantitatively better \u2014 it is qualitatively different knowledge. The edge detector in layer 1 is useful for every image, not just faces. The network learns composable, transferable concepts. This hierarchical structure is precisely why deep learning unlocked capabilities that shallower methods could not reach.'}],
+   render:function(){return vHier();}},
+  {tag:'language problem',  title:'Why language broke early networks',
+   body:[{l:1,t:'\u201cThe animal didn\u2019t cross the street because it was too tired.\u201d What does \u201cit\u201d refer to? You instantly link the pronoun back to \u201canimal,\u201d six words away. Language is full of such long-range dependencies, and resolving them correctly is essential for understanding.'},
+         {l:0,t:'Early neural text models (RNNs) processed words left-to-right, compressing all past context into one fixed-size vector. By the time they reached \u201cit,\u201d the signal from \u201canimal\u201d had been partially overwritten many times. Memory decays with distance. This bottleneck was the central weakness of RNNs.'}],
+   render:function(){return vRNN();}},
+  {tag:'attention mechanism',title:'Attention: every word looks at every word',
+   body:[{l:1,t:'Instead of routing past context through a single shrinking vector, what if every word could directly attend to every other word? For each token (the query), compute a relevance score against every other token (the keys). Normalize the scores into weights that sum to 1. Each token receives a weighted blend of all others\u2019 content.'},
+         {l:0,t:'\u201cit\u201d can now attend strongly to \u201canimal\u201d regardless of distance. The weights are learned during training \u2014 the network discovers on its own which words matter to which others, for every task, all at once. Click any word to explore its learned attention pattern.'}],
+   render:function(){return vAttn(ST.v11);}},
+  {tag:'transformers',      title:'Stacking attention: the Transformer and LLMs',
+   body:[{l:1,t:'Stack many attention layers. Each layer lets every token attend to every other, progressively refining representations. Add a feedforward network after each attention layer, positional encodings so the model knows word order, and residual connections so gradients flow cleanly. This architecture is the Transformer \u2014 the foundation of every major LLM.'},
+         {l:0,t:'Scale to 70 billion parameters, train on trillions of tokens, and emergent capabilities appear: reasoning, code generation, translation \u2014 never explicitly programmed, arising purely from scale. But hard tradeoffs emerge too: hallucination, fixed context windows, enormous compute costs, and the alignment problem of specifying what \u201chelpful but safe\u201d actually means.'}],
+   render:function(){return vTransf();}},
+];
+
+/* ==================== STATE & RENDER ==================== */
+var ST={step:0,v01:2,v03:'relu',v08pos:4.0,v08lr:0.3,v08hist:[4.0],v11:4};
+
+function render(){
+  var s=STEPS[ST.step], tot=STEPS.length;
+  document.getElementById('progress-fill').style.width=((ST.step+1)/tot*100)+'%';
+  document.getElementById('nav-counter').textContent=('0'+(ST.step+1)).slice(-2)+' / '+tot;
+
+  var sbH='<div class="sb-title">Lessons</div>';
+  for(var i=0;i<STEPS.length;i++){
+    sbH+='<div class="sb-item'+(i===ST.step?' active':i<ST.step?' done':'')+'" onclick="jumpTo('+i+')"><span class="sb-num">'+('0'+(i+1)).slice(-2)+'</span><span class="sb-label">'+STEPS[i].tag+'</span></div>';
+  }
+  document.getElementById('sidebar').innerHTML=sbH;
+
+  var bH='<div class="step-pill-row"><span class="step-pill">'+s.tag+'</span><span class="step-frac">'+(ST.step+1)+' of '+tot+'</span></div>';
+  bH+='<h2 class="step-title">'+s.title+'</h2><div class="step-body">';
+  for(var pi=0;pi<s.body.length;pi++)bH+='<p class="'+(s.body[pi].l?'lead':'sub')+'">'+s.body[pi].t+'</p>';
+  bH+='</div><div class="visual-wrap">'+s.render()+'</div>';
+  document.getElementById('step-view').innerHTML=bH;
+
+  var doH='';
+  for(var i=0;i<STEPS.length;i++)doH+='<div class="dot" onclick="jumpTo('+i+')" style="background:'+(i===ST.step?'var(--black)':i<ST.step?'rgba(10,10,10,0.28)':'rgba(10,10,10,0.1)')+'"></div>';
+  document.getElementById('dots').innerHTML=doH;
+
+  document.getElementById('btn-prev').disabled=ST.step===0;
+  document.getElementById('btn-next').textContent=ST.step===tot-1?'Start over \u21ba':'Next \u2192';
+}
+
+function go(d){
+  if(d>0&&ST.step===STEPS.length-1){ST.step=0;}
+  else ST.step=Math.max(0,Math.min(STEPS.length-1,ST.step+d));
+  render();
+  document.getElementById('main-layout').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function jumpTo(i){ST.step=i;render();}
+
+document.getElementById('btn-prev').addEventListener('click',function(){go(-1);});
+document.getElementById('btn-next').addEventListener('click',function(){go(1);});
+
+window.uV01=function(v){ST.v01=+v;document.querySelector('.visual-wrap').innerHTML=vNeuron(ST.v01);};
+window.setFn=function(fn){ST.v03=fn;document.querySelector('.visual-wrap').innerHTML=vAct(fn);};
+window.stepGD=function(){
+  var g=2*(ST.v08pos-2)+1.2*Math.cos(3*ST.v08pos);
+  ST.v08pos=Math.max(0.1,Math.min(4.9,ST.v08pos-ST.v08lr*g));
+  ST.v08hist=ST.v08hist.slice(-8).concat([ST.v08pos]);
+  document.querySelector('.visual-wrap').innerHTML=vGrad(ST.v08pos,ST.v08lr,ST.v08hist);
+};
+window.resetGD=function(){ST.v08pos=4.0;ST.v08hist=[4.0];document.querySelector('.visual-wrap').innerHTML=vGrad(ST.v08pos,ST.v08lr,ST.v08hist);};
+window.setLR=function(v){ST.v08lr=+v;document.querySelector('.visual-wrap').innerHTML=vGrad(ST.v08pos,ST.v08lr,ST.v08hist);};
+window.setQ=function(i){ST.v11=i;document.querySelector('.visual-wrap').innerHTML=vAttn(i);};
+
+render();
+</script>
+</body>
+</html>
