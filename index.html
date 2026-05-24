@@ -159,36 +159,36 @@ function Dim(x1,y1,x2,y2){ return Li(x1,y1,x2,y2,K.gf,0.5,'3 3'); }
 function vNeuron(xv){
   var W=0.7, B=-0.5, yOut=W*xv+B;
   /* Layout constants */
-  var INR=20, NR=28, OUTR=20;          /* radii */
-  var INX=50,  NY=72, OX=230, OUTX=310;
-  var INY=72;
+  var INR=22, NR=30, OUTR=22;          /* radii */
+  var INX=52, NX=165, OX=268;          /* x centres: input, neuron, output */
+  var NY=76;                            /* shared y centre */
   /* Chart */
-  var CX=400, CY=72, CW=168, CH=90;
+  var CX=316, CY=20, CW=252, CH=112;
   var cpx=function(v){return CX+(v+4)/8*CW;};
   var cpy=function(v){return CY+CH/2 - Math.min(Math.max(v,-3),3)/3*(CH/2-6);};
   var dotX=cpx(xv), dotY=cpy(yOut);
 
   var s='';
   /* Input node */
-  s+=Ci(INX,INY,INR,K.bg,K.bgm,0.8);
-  s+=Tx(INX,INY-6,'middle',9,400,K.gl,'input');
-  s+=Tx(INX,INY+7,'middle',11,500,K.bk,xv.toFixed(1));
+  s+=Ci(INX,NY,INR,K.bg,K.bgm,0.8);
+  s+=Tx(INX,NY-7,'middle',9,400,K.gl,'input');
+  s+=Tx(INX,NY+8,'middle',12,500,K.bk,xv.toFixed(1));
   /* Arrow: input right edge → neuron left edge */
-  s+=Ar(INX+INR,INY,NY-NR,INY,K.bk,1.4);
-  s+=Tx((INX+INR+NY-NR)/2,INY-9,'middle',9,400,K.gm,'\u00d7 w=0.7');
+  s+=Ar(INX+INR,NY,NX-NR,NY,K.bk,1.4);
+  s+=Tx((INX+INR+NX-NR)/2,NY-11,'middle',9,400,K.gm,'\u00d7 w=0.7');
   /* Bias arrow: from top down to neuron top */
-  s+=Ar(NY,INY-NR-22,NY,INY-NR,K.gf,0.9);
-  s+=Tx(NY+5,INY-NR-14,'start',9,400,K.gl,'b=\u22120.5');
+  s+=Ar(NX,NY-NR-22,NX,NY-NR,K.gf,0.9);
+  s+=Tx(NX+5,NY-NR-14,'start',9,400,K.gl,'b=\u22120.5');
   /* Neuron */
-  s+=Ci(NY,INY,NR,K.cr,K.bk,1.2);
-  s+=Tx(NY,INY-5,'middle',9,400,K.gl,'\u03a3wx+b');
-  s+=Tx(NY,INY+9,'middle',12,600,K.bk,yOut.toFixed(2));
+  s+=Ci(NX,NY,NR,K.cr,K.bk,1.2);
+  s+=Tx(NX,NY-6,'middle',9,400,K.gl,'\u03a3wx+b');
+  s+=Tx(NX,NY+10,'middle',12,600,K.bk,yOut.toFixed(2));
   /* Arrow: neuron right edge → output node left edge */
-  s+=Ar(NY+NR,INY,OX-OUTR,INY,K.bk,1.4);
+  s+=Ar(NX+NR,NY,OX-OUTR,NY,K.bk,1.4);
   /* Output node */
-  s+=Ci(OX,INY,OUTR,K.cr,K.bk,1.2);
-  s+=Tx(OX,INY-5,'middle',9,400,K.gl,'output');
-  s+=Tx(OX,INY+9,'middle',11,600,K.bk,yOut.toFixed(2));
+  s+=Ci(OX,NY,OUTR,K.cr,K.bk,1.2);
+  s+=Tx(OX,NY-7,'middle',9,400,K.gl,'output');
+  s+=Tx(OX,NY+8,'middle',12,600,K.bk,yOut.toFixed(2));
 
   /* Chart: axes */
   s+=Axes(CX,CY+CH,CW+4,CH+8,K.bgm);
@@ -388,7 +388,8 @@ function vLinSep(){
 
 /* ==================== VISUAL 5: XOR ==================== */
 function vXOR(){
-  var OX=44, OY=190, XR=175, YR=150;
+  /* OX/OY = axis origin. Margins sized so circles (r=20) at the 4 corners stay on screen. */
+  var OX=66, OY=168, XR=150, YR=126, CR=20;
   function px(v){return OX+(v-0.5)/3*XR;}
   function py(v){return OY-(v-0.5)/3*YR;}
   var pts=[{x:0,y:0,o:0},{x:3,y:0,o:1},{x:0,y:3,o:1},{x:3,y:3,o:0}];
@@ -399,16 +400,16 @@ function vXOR(){
   /* tick labels */
   [0,3].forEach(function(v,i){
     s+=Tx(px(v),OY+11,'middle',9,400,K.gf,i===0?'0':'1');
-    s+=Tx(OX-6,py(v)+3,'end',9,400,K.gf,i===0?'0':'1');
+    s+=Tx(OX-7,py(v)+3,'end',9,400,K.gf,i===0?'0':'1');
   });
   /* Mid grid lines */
   s+=Dim(px(1.5),OY-YR+4,px(1.5),OY);
   s+=Dim(OX,py(1.5),OX+XR,py(1.5));
-  s+=Tx(px(1.5)+4,py(1.5)-8,'start',9,400,K.gl,'no line works \u2715');
-  /* Data points */
+  s+=Tx(px(1.5)+4,py(1.5)-9,'start',9,400,K.gl,'no line works \u2715');
+  /* Data points — circles large enough to contain the digit clearly */
   pts.forEach(function(p){
-    s+=Ci(px(p.x),py(p.y),22,p.o?K.cr:K.gd,K.bk,1.6);
-    s+=Tx(px(p.x),py(p.y)+7,'middle',17,600,p.o?K.bk:K.wh,p.o.toString());
+    s+=Ci(px(p.x),py(p.y),CR,p.o?K.cr:K.gd,K.bk,1.6);
+    s+=Tx(px(p.x),py(p.y)+6,'middle',16,700,p.o?K.bk:K.wh,p.o.toString());
   });
 
   /* Info panel */
